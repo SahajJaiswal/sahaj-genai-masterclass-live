@@ -2,49 +2,49 @@ name: Build, Test and Deploy GenAI App
 
 on:
   push:
-    [cite_start]branches: [ main ] # Triggers the robot whenever you push code to the main branch [cite: 287-288]
+    branches: [ main ]
 
 jobs:
   build-and-deploy:
-    [cite_start]runs-on: ubuntu-latest # The clean-room virtual environment [cite: 292-293]
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
         with:
-          [cite_start]fetch-depth: 0 # Required for Hugging Face to see full git history [cite: 297-300]
+          fetch-depth: 0
 
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v1
         with:
-          [cite_start]credentials_json: ${{ secrets.GCP_SA_KEY }} # Your secure service account key [cite: 303-304]
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
 
       - name: Set up Cloud SDK
-        [cite_start]uses: google-github-actions/setup-gcloud@v1 # Installs gcloud tools on the runner [cite: 309-311]
+        uses: google-github-actions/setup-gcloud@v1
 
       - name: Configure Docker for Artifact Registry
-        [cite_start]run: gcloud auth configure-docker asia-south1-docker.pkg.dev # Authorizes the delivery driver [cite: 314-317]
+        run: gcloud auth configure-docker asia-south1-docker.pkg.dev
 
       - name: Build Docker Image
-        # Note: 'genai-repo' matches your verified GCP Artifact Registry name [cite: 320-323]
+        # Using 'genai-repo' to match your verified Artifact Registry
         run: |
           docker build -t asia-south1-docker.pkg.dev/${{ secrets.GCP_PROJECT }}/genai-repo/genai-app:${{ github.sha }} \
                        -t asia-south1-docker.pkg.dev/${{ secrets.GCP_PROJECT }}/genai-repo/genai-app:latest .
 
       - name: Test Docker Image
-        # Health check: Ensures the app boots and Gemini API key works before deploying [cite: 331-335]
+        # Health check: Ensures the app boots before we attempt to deploy it
         run: |
           docker run --rm -e GEMINI_API_KEY="${{ secrets.GEMINI_API_KEY }}" \
             asia-south1-docker.pkg.dev/${{ secrets.GCP_PROJECT }}/genai-repo/genai-app:${{ github.sha }} \
             python -c "import genai_app; print('App module loaded successfully')"
 
       - name: Push Docker Image to Artifact Registry
-        # Uploads your approved version to the Google Cloud "warehouse" [cite: 338-340]
+        # These steps were missing in your previous run
         run: |
           docker push asia-south1-docker.pkg.dev/${{ secrets.GCP_PROJECT }}/genai-repo/genai-app:${{ github.sha }}
           docker push asia-south1-docker.pkg.dev/${{ secrets.GCP_PROJECT }}/genai-repo/genai-app:latest
 
       - name: Deploy to Cloud Run
-        # Final delivery: Cloud Run pulls the new image and makes it live for users [cite: 343-346]
+        # This creates the live service in your Google Cloud console
         run: |
           gcloud run deploy genai-app \
             --image asia-south1-docker.pkg.dev/${{ secrets.GCP_PROJECT }}/genai-repo/genai-app:${{ github.sha }} \
@@ -55,7 +55,6 @@ jobs:
             --set-env-vars GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}
 
       - name: Set up Git for Hugging Face
-        # Identifies the robot as a valid Git user for Hugging Face [cite: 349-351]
         run: |
           git config --global user.email "ci-bot@example.com"
           git config --global user.name "GitHub Actions Bot"
@@ -63,7 +62,6 @@ jobs:
       - name: Push to Hugging Face Space
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
-        # Mirrored deployment: Updates your Hugging Face Space automatically [cite: 353-355]
         run: |
           git remote add space https://huggingface.co/spaces/CNProgram-team/genai-app || true
           git push https://user:${HF_TOKEN}@huggingface.co/spaces/CNProgram-team/genai-app main --force
