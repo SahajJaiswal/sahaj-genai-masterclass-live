@@ -25,25 +25,29 @@ jobs:
         run: gcloud auth configure-docker asia-south1-docker.pkg.dev
 
       - name: Build Docker Image
+        # Updated 'genai-app' to 'genai-repo' in the registry path below
         run: |
-          docker build -t asia-south1-docker.pkg.dev/${{ secrets.GCP_PROJECT }}/genai-app/genai-app:${{ github.sha }} \
-                       -t asia-south1-docker.pkg.dev/${{ secrets.GCP_PROJECT }}/genai-app/genai-app:latest .
+          docker build -t asia-south1-docker.pkg.dev/${{ secrets.GCP_PROJECT }}/genai-repo/genai-app:${{ github.sha }} \
+                       -t asia-south1-docker.pkg.dev/${{ secrets.GCP_PROJECT }}/genai-repo/genai-app:latest .
 
       - name: Test Docker Image
+        # Updated 'genai-app' to 'genai-repo' in the image name below
         run: |
           docker run --rm -e GEMINI_API_KEY="${{ secrets.GEMINI_API_KEY }}" \
-            asia-south1-docker.pkg.dev/${{ secrets.GCP_PROJECT }}/genai-app/genai-app:${{ github.sha }} \
+            asia-south1-docker.pkg.dev/${{ secrets.GCP_PROJECT }}/genai-repo/genai-app:${{ github.sha }} \
             python -c "import genai_app; print('App module loaded successfully')"
 
       - name: Push Docker Image to Artifact Registry
+        # Updated 'genai-app' to 'genai-repo' in the push commands below
         run: |
-          docker push asia-south1-docker.pkg.dev/${{ secrets.GCP_PROJECT }}/genai-app/genai-app:${{ github.sha }}
-          docker push asia-south1-docker.pkg.dev/${{ secrets.GCP_PROJECT }}/genai-app/genai-app:latest
+          docker push asia-south1-docker.pkg.dev/${{ secrets.GCP_PROJECT }}/genai-repo/genai-app:${{ github.sha }}
+          docker push asia-south1-docker.pkg.dev/${{ secrets.GCP_PROJECT }}/genai-repo/genai-app:latest
 
       - name: Deploy to Cloud Run
+        # Updated 'genai-app' to 'genai-repo' in the --image flag below
         run: |
           gcloud run deploy genai-app \
-            --image asia-south1-docker.pkg.dev/${{ secrets.GCP_PROJECT }}/genai-app/genai-app:${{ github.sha }} \
+            --image asia-south1-docker.pkg.dev/${{ secrets.GCP_PROJECT }}/genai-repo/genai-app:${{ github.sha }} \
             --platform managed \
             --region asia-south1 \
             --allow-unauthenticated \
