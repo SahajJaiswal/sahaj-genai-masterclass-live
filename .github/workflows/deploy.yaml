@@ -56,12 +56,12 @@ jobs:
 
       - name: Set up Git for Hugging Face
         run: |
-          git config --global user.email "ci-bot@example.com"
+          git config --global user.email "sahaj.jaiswal2@gmail.com"
           git config --global user.name "GitHub Actions Bot"
 
       - name: Push to Hugging Face Space
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
-          git remote add space https://huggingface.co/spaces/CNProgram-team/genai-app || true
-          git push https://user:${HF_TOKEN}@huggingface.co/spaces/CNProgram-team/genai-app main --force
+          git remote add space https://huggingface.co/spaces/SahajJaiswal/genai-app || true
+          git push https://user:${HF_TOKEN}@huggingface.co/spaces/SahajJaiswal/genai-app main --force
